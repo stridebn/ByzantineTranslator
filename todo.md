@@ -9,12 +9,21 @@
 
 [ ] Keras-OCR
 
+[ ] Yolo
+
+[ ] OpenCV
+
 ### Training Data
 [ ] Gather sufficient training data
 
 [ ] Produce single-line or full document ground truth references
 
 [ ] Train and test
+
+### Testing Pipeline
+[ ] Determine solution for verification
+
+[ ] Prepare and formulate test and grading framework for analyzing results
 
 ### Staff Music Writer
 [ ] LilyPond?
