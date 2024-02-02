@@ -21,9 +21,11 @@
 [ ] Train and test
 
 ### Testing Pipeline
-[ ] Determine solution for verification
+[V] Determine solution for verification - Rip unicode characters via code (all training samples are PDF documents) to determine if music successfully read.
 
-[ ] Prepare and formulate test and grading framework for analyzing results
+[ ] Prepare and formulate test and grading framework for analyzing results (all symbols have been read and processed successfully)
+
+[ ] Post-translational: ensure all phrases maintain 
 
 ### Staff Music Writer
 [ ] LilyPond?
