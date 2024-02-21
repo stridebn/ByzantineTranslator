@@ -33,10 +33,11 @@ def ordered_special_characters(pdf_path):
     return special_unicode_chars
 
 # Path to the uploaded PDF file
-pdf_path = 'TrainingData/Nov26Apo.pdf'
-pdf_path2 = 'TrainingData\EZ-CharacterTables.pdf'
+pdf_path = 'TrainingData/AprilB.pdf'
+#pdf_path = 'C:\Users\strid\Desktop\School\ByzantineTranslator\ByzantineTranslator\TrainingData\AprilB.pdf'
+pdf_path2 = 'TrainingData/EZ-CharacterTables.pdf'
 
 sp_chars = extract_special_unicode_chars(pdf_path)
-# osp_chars = ordered_special_characters(pdf_path2)
+osp_chars = ordered_special_characters(pdf_path2)
 print(sp_chars)
 # print(osp_chars)

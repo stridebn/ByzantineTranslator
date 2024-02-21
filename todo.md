@@ -45,7 +45,7 @@
 
 [ ] Implement stress, ties, and accidentals
 
-[ ] Implement lyrics rendering
+[ ] (Stretch Goal) Implement lyrics rendering
 
 ### Packaging
 [ ] Desktop application (simple gui, file import and output location)
