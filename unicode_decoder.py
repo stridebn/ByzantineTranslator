@@ -53,6 +53,7 @@ def decode_unicode(charlist):
 
 def generate_melody(movements, starting_pitch):
     melody = stream.Stream()
+    melody.clear()
     current_pitch = pitch.Pitch(starting_pitch)
     current_note = note.Note()
     current_note.pitch = current_pitch
@@ -89,7 +90,7 @@ def generate_melody(movements, starting_pitch):
                 current_pitch.octave += 1
             elif direction == 'D' and next_degree_index > current_degree_index:
                 current_pitch.octave -= 1
-        
+            current_note.pitch = current_pitch
             melody.append(current_note)
             current_note = note.Note()
             # current_note.pitch.midi = melody[-1].pitch.midi + interval
@@ -153,8 +154,8 @@ if helpers.is_sublist(charlist, helpers.TONE8):
 symbols, movements = decode_unicode(charlist)
 for ele in movements:
     print(ele)
-# melody = generate_melody(movements, starting_pitch)
-# melody.show('musicxml')
+melody = generate_melody(movements, starting_pitch)
+melody.show('musicxml')
 # melody = generate_melody(movements, starting_pitch)
 # print("Symbols:", symbols)
 # print("Movements:", movements)
