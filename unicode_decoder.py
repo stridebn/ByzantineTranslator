@@ -26,7 +26,6 @@ def decode_unicode(charlist):
     }
 
     # Interpret each character in the input list
-    
     duration_change = None
     dur_forward = 0
     for char in charlist:
@@ -38,8 +37,20 @@ def decode_unicode(charlist):
                 movement[-1] = duration_change
                 # symbol_list[-1] = name
                 # movement_list[-1] = name
-            symbol_list.append(movement[-1])
-            movement_list.append(movement[:-1])
+            if special == "ROK":
+                symbol_list.append("Oligon with Kentemata (combined)")
+                movement_list.append(helpers.OLIGON)
+                movement_list.append(helpers.KENTEMATA)
+            elif special == "R2A":
+                symbol_list.append(movement[-1])
+                movement_list.append(helpers.APOSTROPHOS)
+                movement_list.append(helpers.APOSTROPHOS)
+            elif special == "RE":
+                symbol_list.append(movement[-1])
+                movement_list.append(helpers.ELAPHRON)
+            else:
+                symbol_list.append(movement[-1])
+                movement_list.append(movement[:-1])
         elif char in accidental:
             duration_change, dur_forward, dur_back = accidental[char]
             for i in range(dur_back):
@@ -54,19 +65,21 @@ def decode_unicode(charlist):
 def generate_melody(movements, starting_pitch):
     melody = stream.Stream()
     melody.clear()
+    melody.append(meter.TimeSignature())
+    print(f"Starting pitch: {starting_pitch}")
     current_pitch = pitch.Pitch(starting_pitch)
     current_note = note.Note()
     current_note.pitch = current_pitch
     scale_degrees = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
     print(len(movements))
     for element in movements:
-        if (len(element) < 3):
-            print("Oops")
-        else:
+        if (len(element) > 2):
             direction, magnitude, stress = element[:3]
             # duration = element[3]
+            print(f"Reading {element[:3]}")
             current_degree_index = scale_degrees.index(current_pitch.step)
-
+            print(f"Current index: {current_degree_index}")
+            print(f"Note before change: {current_note.pitch}")
             # Apply stress
             # if stress == 'S':
             #     current_note.articulations.append(articulations.Accent)
@@ -92,10 +105,12 @@ def generate_melody(movements, starting_pitch):
                 current_pitch.octave -= 1
             current_note.pitch = current_pitch
             melody.append(current_note)
+            print(f"The note after is : {current_note.pitch}\n~~~")
             current_note = note.Note()
             # current_note.pitch.midi = melody[-1].pitch.midi + interval
             # Adjust current note pitch
-
+    for ts in melody.recurse().getElementsByClass(meter.TimeSignature):
+        melody.remove(ts)
     return melody
 
 def generate_melody_lilypond(movements, starting_pitch):
@@ -144,13 +159,16 @@ def generate_melody_lilypond(movements, starting_pitch):
     return lilypond_notation
 
 # Example usage:
-pdf_path = 'TrainingData/AprilB.pdf'
+pdf_path = 'TrainingData/b5109.pdf'
 charlist = rip_unicode.extract_special_unicode_chars(pdf_path)  # List of Unicode characters to decode
 starting_pitch = 'C4'
 starting_pitchly = "c'"
 if helpers.is_sublist(charlist, helpers.TONE8):
     starting_pitch = 'G4'
     starting_pitchly = 'g4'
+if helpers.is_sublist(charlist, helpers.TONE3):
+    starting_pitch = 'F4'
+    starting_pitchly = 'f4'
 symbols, movements = decode_unicode(charlist)
 for ele in movements:
     print(ele)
