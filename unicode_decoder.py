@@ -163,12 +163,13 @@ pdf_path = 'TrainingData/b5109.pdf'
 charlist = rip_unicode.extract_special_unicode_chars(pdf_path)  # List of Unicode characters to decode
 starting_pitch = 'C4'
 starting_pitchly = "c'"
-if helpers.is_sublist(charlist, helpers.TONE8):
-    starting_pitch = 'G4'
-    starting_pitchly = 'g4'
-if helpers.is_sublist(charlist, helpers.TONE3):
-    starting_pitch = 'F4'
-    starting_pitchly = 'f4'
+# if helpers.is_sublist(charlist, helpers.TONE8):
+#     starting_pitch = 'G4'
+#     starting_pitchly = 'g4'
+# if helpers.is_sublist(charlist, helpers.TONE3):
+#     starting_pitch = 'F4'
+#     starting_pitchly = 'f4'
+starting_pitch = helpers.get_tone(charlist)[0]
 symbols, movements = decode_unicode(charlist)
 for ele in movements:
     print(ele)
