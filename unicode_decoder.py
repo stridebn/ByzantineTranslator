@@ -62,6 +62,8 @@ def decode_unicode(charlist):
 
     return symbol_list, movement_list
 
+
+# TODO: Add tone support
 def generate_melody(movements, starting_pitch):
     melody = stream.Stream()
     melody.clear()
@@ -79,7 +81,7 @@ def generate_melody(movements, starting_pitch):
             print(f"Reading {element[:3]}")
             current_degree_index = scale_degrees.index(current_pitch.step)
             print(f"Current index: {current_degree_index}")
-            print(f"Note before change: {current_note.pitch}")
+            print(f"Note before change: {current_pitch}")
             # Apply stress
             # if stress == 'S':
             #     current_note.articulations.append(articulations.Accent)
