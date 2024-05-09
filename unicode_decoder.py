@@ -1,4 +1,6 @@
 import mappings
+import noums
+import timings
 import rip_unicode
 import helpers
 from music21 import *
@@ -29,57 +31,100 @@ def decode_unicode(charlist):
     duration_change = None
     dur_forward = 0
     for char in charlist:
-        if char in mappings.my_map:
-            direction, magnitude, stress, special, name = mappings.my_map[char]
+        if char in noums.noums:
+            # direction, magnitude, stress, special, name = mappings.my_map[char]
+            direction, magnitude, stress, special, name = noums.noums[char]
             movement = [direction,magnitude,stress,special,name]
             if (dur_forward > 0) :
                 dur_forward -=1 
-                movement[-1] = duration_change
+                movement[-2] = float(duration_change)
                 # symbol_list[-1] = name
                 # movement_list[-1] = name
             if special == "ROK":
                 symbol_list.append("Oligon with Kentemata (combined)")
                 movement_list.append(helpers.OLIGON)
                 movement_list.append(helpers.KENTEMATA)
-            elif special == "R2A":
-                symbol_list.append(movement[-1])
-                movement_list.append(helpers.APOSTROPHOS)
-                movement_list.append(helpers.APOSTROPHOS)
+            elif special == "RKO":
+                symbol_list.append("Oligon with Kentemata (combined)")
+                movement_list.append(helpers.KENTEMATA)
+                movement_list.append(helpers.OLIGON)
+            # elif special == "R2A":
+            #     symbol_list.append(movement[-1])
+            #     movement_list.append(helpers.APOSTROPHOS)
+            #     movement_list.append(helpers.APOSTROPHOS)
             elif special == "RE":
                 symbol_list.append(movement[-1])
                 movement_list.append(helpers.ELAPHRON)
-            else:
+            elif special == "CE":
+                symbol_list.append(movement[-1])
+                movement_list.append(helpers.CELAPHRON)
+                movement_list.append(helpers.CELAPHRON)
+            elif special in helpers.BYZSCALE:
+                symbol_list.append(special)
+                movement_list.append(['',0,special,0])
+            elif special == "MLine":
+                symbol_list.append(movement[-1])
+                movement_list.append(['',0,'M',0])
+            elif special == "":
                 symbol_list.append(movement[-1])
                 movement_list.append(movement[:-1])
-        elif char in accidental:
-            duration_change, dur_forward, dur_back = accidental[char]
+            elif special == "REST":
+                symbol_list.append(movement[-1])
+                movement_list.append(['',0,special,0])
+        elif char in timings.timings:
+            dc, df, db = timings.timings[char]
+            duration_change = float(dc)
+            dur_forward = int(df)
+            dur_back = int(db)
             for i in range(dur_back):
-                item=0-1-i
-                movement_list[item][4] = duration_change
+                item=0-2-(i)
+                print(f"AFTER: {movement_list[item][:4]}")
+                print(f"BEFORE: {movement_list[item][:4]}")
+                movement_list[item][3] = duration_change
+                print(f"AFTER: {movement_list[item][:4]}")
+            i = len(movement_list) - 1
+            while (type(movement_list[i]) == str):
+                i -= 1
+            movement_list[i][3] = duration_change
         else:
             symbol_list.append("Unknown Symbol")
+            print('Unknown symbol: ' + f'\\u{ord(char):04x}')
             movement_list.append("")
 
     return symbol_list, movement_list
 
 
 # TODO: Add tone support
-def generate_melody(movements, starting_pitch):
-    melody = stream.Stream()
+def generate_melody(movements, starting_pitch, tone, t_tempo):
+    melodys = stream.Stream()
+    melodys.timeSignature = meter.TimeSignature('1/4')
+    melody = stream.Measure()
     melody.clear()
-    melody.append(meter.TimeSignature())
+    t = tempo.MetronomeMark(number=t_tempo)
+    melody.append(t) # APPEND TEMPO HERE (BPM) t_tempo
     print(f"Starting pitch: {starting_pitch}")
     current_pitch = pitch.Pitch(starting_pitch)
     current_note = note.Note()
     current_note.pitch = current_pitch
+    base_scale_degrees = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
     scale_degrees = ['C', 'D', 'E', 'F', 'G', 'A', 'B']
+    # if tone == 1:
+    #     scale_degrees = helpers.TONE1SCALED
+    # elif tone == 2:
+    #     scale_degrees = helpers.TONE2SCALEG
+    if tone == 3:
+        scale_degrees = helpers.TONE3SCALEF
+    if tone == 8:
+        scale_degrees = helpers.TONE8SCALEF
+    elif tone == 5:
+        scale_degrees = helpers.TONE5SCALEKE
     print(len(movements))
     for element in movements:
         if (len(element) > 2):
-            direction, magnitude, stress = element[:3]
-            # duration = element[3]
-            print(f"Reading {element[:3]}")
-            current_degree_index = scale_degrees.index(current_pitch.step)
+            direction, magnitude, stress, dur = element[:4]
+            dur_f = helpers.safe_cast(dur, float, default=1)
+            print(f"Reading {element[:4]}")
+            current_degree_index = scale_degrees.index(current_pitch.name)
             print(f"Current index: {current_degree_index}")
             print(f"Note before change: {current_pitch}")
             # Apply stress
@@ -88,32 +133,49 @@ def generate_melody(movements, starting_pitch):
             # elif stress == 'U':
             #     # Unstressed - example, could add more nuance here
             #     current_note.articulations.append(articulations.Tenuto)
-
-            # Calculate next note based on direction and magnitude
-            if direction == 'U':
-                next_degree_index = (current_degree_index + magnitude) % len(scale_degrees)
-            elif direction == 'D':
-                next_degree_index = (current_degree_index - magnitude) % len(scale_degrees)
+            if stress == "M" and len(melody) > 0:
+                total_duration = sum([element.duration.quarterLength for element in melody.notes])
+                melody.timeSignature = meter.TimeSignature(f'{int(total_duration)}/4')
+                melodys.append(melody)
+                melody = stream.Measure()
+            elif stress in helpers.BYZSCALE:
+                if current_pitch != base_scale_degrees[helpers.BYZSCALE.index(stress)]:
+                    print("Bad note!")
+            elif stress == "REST":
+                melody.append(note.Rest(length=1.0))
             else:
-                next_degree_index = current_degree_index  # No change
-        
-            next_pitch_step = scale_degrees[next_degree_index]
-            current_pitch = pitch.Pitch(next_pitch_step + str(current_pitch.octave))
+                # Calculate next note based on direction and magnitude
+                if direction == 'U':
+                    next_degree_index = (current_degree_index + magnitude) % len(scale_degrees)
+                elif direction == 'D':
+                    next_degree_index = (current_degree_index - magnitude) % len(scale_degrees)
+                else:
+                    next_degree_index = current_degree_index  # No change
             
-            # Adjust octave if necessary (this is a simplified logic)
-            if direction == 'U' and next_degree_index < current_degree_index:
-                current_pitch.octave += 1
-            elif direction == 'D' and next_degree_index > current_degree_index:
-                current_pitch.octave -= 1
-            current_note.pitch = current_pitch
-            melody.append(current_note)
-            print(f"The note after is : {current_note.pitch}\n~~~")
-            current_note = note.Note()
-            # current_note.pitch.midi = melody[-1].pitch.midi + interval
-            # Adjust current note pitch
-    for ts in melody.recurse().getElementsByClass(meter.TimeSignature):
-        melody.remove(ts)
-    return melody
+                next_pitch_step = scale_degrees[next_degree_index]
+                current_pitch = pitch.Pitch(next_pitch_step + str(current_pitch.octave))
+                
+                # Adjust octave if necessary (this is a simplified logic)
+                if direction == 'U' and next_degree_index < current_degree_index:
+                    current_pitch.octave += 1
+                elif direction == 'D' and next_degree_index > current_degree_index:
+                    current_pitch.octave -= 1
+                current_note.pitch = current_pitch
+                if dur_f == 2.0:
+                    current_note.duration = duration.Duration(type='half')
+                elif dur_f == 0.5:
+                    current_note.duration = duration.Duration(type='eighth')
+                melody.append(current_note)
+                print(f"The note after is : {current_note.pitch}\n~~~")
+                current_note = note.Note()
+    for n in melodys.notes:
+        if n.tie:
+            # Remove the tie attribute
+            n.tie = None
+    melodys.append(key.Key('F'))
+    # melodys.append(tempo.MetronomeMark('quarter', 150, note))
+    melodys.append(melody)
+    return melodys
 
 def generate_melody_lilypond(movements, starting_pitch):
     # Initialize the LilyPond notation with the starting pitch
@@ -162,20 +224,31 @@ def generate_melody_lilypond(movements, starting_pitch):
 
 # Example usage:
 pdf_path = 'TrainingData/b5109.pdf'
+# pdf_path = 'TrainingData/b5011.pdf'
+# pdf_path = 'TrainingData/b5053.pdf'
+# pdf_path = 'TrainingData/b5211.pdf'
+# pdf_path = 'TrainingData/b3205_Apolytikion.pdf'
+# pdf_path = 'TrainingData/b2925_Blessed_Brief.pdf'
 charlist = rip_unicode.extract_special_unicode_chars(pdf_path)  # List of Unicode characters to decode
-starting_pitch = 'C4'
-starting_pitchly = "c'"
-# if helpers.is_sublist(charlist, helpers.TONE8):
+print('\uf068' in charlist)
+# if helpers.is_sublist(charlist, helpers.TONE8):z
 #     starting_pitch = 'G4'
 #     starting_pitchly = 'g4'
 # if helpers.is_sublist(charlist, helpers.TONE3):
 #     starting_pitch = 'F4'
 #     starting_pitchly = 'f4'
-starting_pitch = helpers.get_tone(charlist)[0]
+starting_pitch, tone = helpers.get_tone(helpers.get_tone_marks(charlist))
+print(helpers.get_tone_marks(charlist))
 symbols, movements = decode_unicode(charlist)
+print(helpers.get_tone(charlist))
 for ele in movements:
     print(ele)
-melody = generate_melody(movements, starting_pitch)
+t_tempo = rip_unicode.get_tempo(pdf_path)
+melody = generate_melody(movements, starting_pitch, tone, t_tempo)
+md = metadata.Metadata()
+md.composer = f'In Tone {tone}'
+md.title = f'{pdf_path}'
+melody.append(md)
 melody.show('musicxml')
 # melody = generate_melody(movements, starting_pitch)
 # print("Symbols:", symbols)
