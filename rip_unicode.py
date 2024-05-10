@@ -7,17 +7,19 @@ def extract_special_unicode_chars(pdf_path):
     # Open the PDF
     pdf_reader = PyPDF2.PdfReader(pdf_path)
     special_unicode_chars = []
-    # Iterate through each page
-    # print(f"Total pages: {pdf_reader._get_num_pages()}")
     for page in pdf_reader.pages:
         text = page.extract_text()
         # Iterate through each character and check if it's a special Unicode character
         for char in text:
             if char == '\uF068' and char in special_unicode_chars:
                 return special_unicode_chars
-            elif ord(char) > ord('\uE000'):  # ASCII range is up to 127, so anything above is special Unicode
+            elif ord(char) > ord('\uE000'):  # \uE000 represents the bound of the EZ-Byzantine font 
                 special_unicode_chars.append(char)
     return special_unicode_chars
+
+
+    # Iterate through each page
+    # print(f"Total pages: {pdf_reader._get_num_pages()}")
 
 def get_tempo(pdf_path):
     tempo_marks = ['\uf041', '\uf061', '\uf063', '\uf073', '\uf07A', '\uf078', '\uf058', '\uf05A']

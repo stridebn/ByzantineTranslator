@@ -224,6 +224,7 @@ def generate_melody_lilypond(movements, starting_pitch):
 
 # Example usage:
 pdf_path = 'TrainingData/b5109.pdf'
+pdf_path = 'b5109.pdf'
 # pdf_path = 'TrainingData/b5011.pdf'
 # pdf_path = 'TrainingData/b5053.pdf'
 # pdf_path = 'TrainingData/b5211.pdf'
